@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tax Invoice Generator - Unacademy</title>
+  <!-- Included html2canvas library to generate the image -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    :root {
+      --primary-color: #1d2939;
+      --secondary-color: #475467;
+      --unacademy-green: #08BD80;
+      --unacademy-blue: #3C70F4;
+      --border-color: #eaecf0;
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      font-family: var(--font-family);
+      color: var(--primary-color);
+      background-color: #111317;
+      margin: 0;
+      padding: 40px 20px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 30px;
+    }
+
+    /* Interactive Form Configuration Box Panel */
+    .form-panel {
+      background-color: #ffffff;
+      width: 100%;
+      max-width: 400px;
+      padding: 30px;
+      box-sizing: border-box;
+      box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.4);
+      border-radius: 8px;
+    }
+
+    .form-panel h2 {
+      margin-top: 0;
+      margin-bottom: 20px;
+      font-size: 20px;
+      color: var(--unacademy-blue);
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 10px;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 700;
+      font-size: 13px;
+      margin-bottom: 6px;
+      color: var(--primary-color);
+    }
+
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #d0d5dd;
+      border-radius: 6px;
+      box-sizing: border-box;
+      font-size: 14px;
+    }
+
+    .btn-print {
+      width: 100%;
+      background-color: var(--unacademy-blue);
+      color: white;
+      padding: 12px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 15px;
+      margin-top: 10px;
+    }
+
+    .btn-print:hover {
+      background-color: #2b54c7;
+    }
+
+    /* Live Preview Invoice Canvas card layout */
+    .invoice-card {
+      background-color: #ffffff;
+      width: 100%;
+      max-width: 800px;
+      min-height: 1050px;
+      padding: 60px 50px;
+      box-sizing: border-box;
+      box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Header Brand Elements */
+    .brand-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 50px;
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: end;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--unacademy-blue);
+    }
+
+    .logo-icon {
+      display: inline-block;
+      width: 24px;
+      height: 14px;
+      background-color: var(--unacademy-green);
+      border-bottom-left-radius: 12px;
+      border-bottom-right-radius: 12px;
+      position: relative;
+      margin-right: 8px;
+    }
+
+    .logo-icon::before {
+      content: '';
+      position: absolute;
+      top: -8px;
+      left: 2px;
+      width: 20px;
+      height: 6px;
+      background-color: var(--unacademy-blue);
+      border-radius: 2px;
+    }
+
+    .invoice-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #1d2939;
+      letter-spacing: 0.5px;
+    }
+
+    /* Two-Column Metadata Blocks */
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 40px;
+      row-gap: 24px;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 40px;
+    }
+
+    .info-block h3 {
+      font-size: 14px;
+      font-weight: 700;
+      margin: 0 0 6px 0;
+      color: var(--primary-color);
+    }
+
+    .info-block p {
+      margin: 0;
+      color: var(--secondary-color);
+    }
+
+    .meta-pair {
+      margin-bottom: 18px;
+    }
+
+    .meta-pair .label {
+      font-weight: 700;
+      color: var(--primary-color);
+      margin-bottom: 2px;
+    }
+
+    .meta-pair .value {
+      color: var(--secondary-color);
+    }
+
+    /* Financial Line Item Tables */
+    .particulars-section {
+      margin-top: 20px;
+      flex-grow: 1;
+    }
+
+    .table-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--primary-color);
+      padding-bottom: 12px;
+      margin-bottom: 24px;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    .line-item {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .line-item .desc {
+      color: var(--secondary-color);
+      max-width: 75%;
+    }
+
+    .line-item .amt {
+      color: var(--primary-color);
+      font-weight: 500;
+      text-align: right;
+    }
+
+    .total-break {
+      border-top: 1px solid var(--border-color);
+      margin-top: 30px;
+      padding-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .total-break .label {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--primary-color);
+    }
+
+    .total-break .value {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--primary-color);
+    }
+
+    /* Footer Conditions */
+    .invoice-footer {
+      margin-top: 60px;
+      font-size: 12px;
+      color: var(--secondary-color);
+      line-height: 1.6;
+      border-top: 1px solid var(--border-color);
+      padding-top: 20px;
+    }
+
+    .invoice-footer ol {
+      margin: 0;
+      padding-left: 16px;
+    }
+
+    .invoice-footer li {
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Dynamic Control Configuration Box Panel -->
+  <div class="form-panel">
+    <h2>Invoice Controls</h2>
+
+    <div class="form-group">
+      <label for="input-inv-date">Invoice Date</label>
+      <input type="date" id="input-inv-date" onchange="processCalculations()">
+    </div>
+
+    <div class="form-group">
+      <label for="input-pay-time">Payment Date & Time</label>
+      <input type="datetime-local" id="input-pay-time" onchange="processCalculations()">
+    </div>
+
+    <div class="form-group">
+      <label for="input-product">Course / Purchase Description</label>
+      <textarea id="input-product" rows="2" oninput="processCalculations()">JEE Advanced 2023 purchase</textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="input-total">Total Price (₹)</label>
+      <input type="number" id="input-total" value="3999" min="0" step="0.01" oninput="processCalculations()">
+    </div>
+
+    <!-- Trigger function rewritten to generate image asset download link loops -->
+    <button type="button" class="btn-print" id="btn-download" onclick="generateInvoiceImage()">Download Invoice
+      Image</button>
+  </div>
+
+  <!-- Live Invoice Canvas Box -->
+  <div class="invoice-card" id="invoice-capture-zone">
+
+    <!-- Header Branding Area -->
+    <header class="brand-header">
+      <div class="logo-area">
+        <div class="logo-icon"></div>
+        <span>unacademy</span>
+      </div>
+      <div class="invoice-title">TAX INVOICE</div>
+    </header>
+
+    <!-- Dynamic Billing Information Grid -->
+    <main class="info-grid">
+
+      <!-- Left Hand Details Column -->
+      <div class="column-left">
+        <div class="info-block" style="margin-bottom: 28px;">
+          <h3>From</h3>
+          <p style="font-weight: 700; color: var(--primary-color);">Sorting Hat Technologies Pvt Ltd</p>
+          <p>Maruti Infotech Centre, 3rd Floor, A-Block, Domlur,</p>
+          <p>Koramangala Inner Ring Road, Bangalore - 560071</p>
+        </div>
+
+        <div class="meta-pair">
+          <div class="label">Invoice No:</div>
+          <div class="value" id="lbl-invoice-no">Loading...</div>
+        </div>
+
+        <div class="meta-pair">
+          <div class="label">Transaction ID:</div>
+          <div class="value" id="lbl-transaction-id">Loading...</div>
+        </div>
+
+        <div class="meta-pair" style="margin-bottom: 35px;">
+          <div class="label">Invoice Date:</div>
+          <div class="value" id="lbl-invoice-date">--</div>
+        </div>
+
+        <div class="info-block">
+          <h3>Invoice for</h3>
+          <p style="font-weight: 700; color: var(--primary-color);">Deepak Sharma</p>
+          <p>deepaksharma.1897@gmail.com</p>
+          <p>7532944234</p>
+          <p>Delhi</p>
+        </div>
+      </div>
+
+      <!-- Right Hand Details Column -->
+      <div class="column-right">
+        <div class="info-block" style="margin-bottom: 28px; line-height: 1.6;">
+          <p><span style="font-weight: 700; color: var(--primary-color);">State:</span> Karnataka</p>
+          <p><span style="font-weight: 700; color: var(--primary-color);">PAN:</span> <span
+              id="lbl-pan">Loading...</span></p>
+          <p><span style="font-weight: 700; color: var(--primary-color);">CIN:</span> <span
+              id="lbl-cin">Loading...</span></p>
+          <p><span style="font-weight: 700; color: var(--primary-color);">GSTIN:</span> <span
+              id="lbl-gstin">Loading...</span></p>
+        </div>
+
+        <div class="meta-pair">
+          <div class="label">Place of Supply:</div>
+          <div class="value">Karnataka (India)</div>
+        </div>
+
+        <div class="meta-pair" style="margin-bottom: 74px;">
+          <div class="label">HSN Code:</div>
+          <div class="value">999293</div>
+        </div>
+
+        <div class="meta-pair">
+          <div class="label">Mode of payment:</div>
+          <div class="value">Online</div>
+        </div>
+
+        <div class="meta-pair">
+          <div class="label">Payment date & time:</div>
+          <div class="value" id="lbl-payment-time">--</div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Statement Line Items -->
+    <section class="particulars-section">
+      <div class="table-header">
+        <div>Particulars</div>
+        <div>Amount</div>
+      </div>
+
+      <div class="line-item">
+        <div class="desc" id="lbl-product-desc">Service fees for Unacademy Crash Course - JEE Advanced 2023 purchase
+        </div>
+        <div class="amt" id="lbl-service-fee">₹0.00</div>
+      </div>
+
+      <div class="line-item">
+        <div class="desc">IGST (18%)</div>
+        <div class="amt" id="lbl-igst">₹0.00</div>
+      </div>
+
+      <div class="total-break">
+        <div class="label">Total</div>
+        <div class="value" id="lbl-grand-total">₹0.00</div>
+      </div>
+    </section>
+
+    <!-- Legal Disclaimer & Note Footnotes -->
+    <footer class="invoice-footer">
+      <ol>
+        <li>GST under reverse charge is not payable on this invoice</li>
+        <li>This is a computer generated invoice and does not require a signature</li>
+      </ol>
+    </footer>
+
+  </div>
+
+  <script>
+    function setCurrentDefaults() {
+      const now = new Date();
+      const localDate = now.toISOString().split('T')[0];
+      const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+
+      document.getElementById('input-inv-date').value = localDate;
+      document.getElementById('input-pay-time').value = localDateTime;
+    }
+
+    // Generate isolated random alpha-numeric identifiers on programmatic load lifecycle
+    function seedAutoValues() {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      const nums = '0123456789';
+
+      const randomString = (len, set) => Array.from({ length: len }, () => set[Math.floor(Math.random() * set.length)]).join('');
+
+      document.getElementById('lbl-invoice-no').innerText = "UA/" + randomString(7, nums);
+      document.getElementById('lbl-transaction-id').innerText = randomString(16, chars + nums);
+      document.getElementById('lbl-pan').innerText = randomString(5, chars) + randomString(4, nums) + randomString(1, chars);
+      document.getElementById('lbl-cin').innerText = "U" + randomString(5, nums) + randomString(2, chars) + randomString(4, nums) + "PTC" + randomString(6, nums);
+      document.getElementById('lbl-gstin').innerText = randomString(2, nums) + randomString(5, chars) + randomString(4, nums) + randomString(1, chars) + "1Z" + randomString(1, nums + chars);
+    }
+
+    // Format utility mapping date strings into readable invoice date representations
+    function parseDisplayDate(dateInput) {
+      if (!dateInput) return '';
+      const d = new Date(dateInput);
+      const elements = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      return `${String(d.getDate()).padStart(2, '0')}-${elements[d.getMonth()]}-${d.getFullYear()}`;
+    }
+
+    // New format utility to map 'datetime-local' values into readable text for the invoice canvas
+    function parseDisplayDateTime(dateTimeInput) {
+      if (!dateTimeInput) return '';
+      const d = new Date(dateTimeInput);
+      if (isNaN(d.getTime())) return dateTimeInput;
+
+      const elements = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      let hours = d.getHours();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      const minutes = String(d.getMinutes()).padStart(2, '0');
+
+      return `${String(d.getDate()).padStart(2, '0')}-${elements[d.getMonth()]}-${d.getFullYear()} ${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
+    }
+
+    // Dynamic processing calculations engine updating reverse logic taxes
+    function processCalculations() {
+      const baseDate = document.getElementById('input-inv-date').value;
+      document.getElementById('lbl-invoice-date').innerText = parseDisplayDate(baseDate);
+
+      const payTimeInput = document.getElementById('input-pay-time').value;
+      document.getElementById('lbl-payment-time').innerText = parseDisplayDateTime(payTimeInput);
+
+      const prodText = document.getElementById('input-product').value;
+      document.getElementById('lbl-product-desc').innerText = "Service fees for Unacademy Crash Course - " + prodText;
+
+      const inputTotal = parseFloat(document.getElementById('input-total').value) || 0;
+
+      const serviceFees = inputTotal / 1.18;
+      const calculatedIgst = inputTotal - serviceFees;
+
+      document.getElementById('lbl-service-fee').innerText = "₹" + serviceFees.toFixed(2);
+      document.getElementById('lbl-igst').innerText = "₹" + calculatedIgst.toFixed(2);
+      document.getElementById('lbl-grand-total').innerText = "₹" + inputTotal.toFixed(2);
+    }
+
+    // New isolation handler converting canvas nodes into images on programmatic execution requests
+    function generateInvoiceImage() {
+      const targetElement = document.getElementById('invoice-capture-zone');
+      const btn = document.getElementById('btn-download');
+
+      btn.innerText = "Generating Image...";
+      btn.disabled = true;
+
+      // Configurations forcing high-fidelity clear text vectors scaling engine layouts
+      html2canvas(targetElement, {
+        scale: 2, // Doubles resolution clarity matrix elements
+        useCORS: true,
+        backgroundColor: '#ffffff'
+      }).then(canvas => {
+        const imageURL = canvas.toDataURL("image/png");
+
+        // Setup anchor element lifecycle tracking arrays 
+        const downloadLink = document.createElement('a');
+        const invoiceNo = document.getElementById('lbl-invoice-no').innerText.replace("/", "_");
+
+        downloadLink.href = imageURL;
+        downloadLink.download = `Invoice_${invoiceNo}.png`;
+
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+
+        btn.innerText = "Download Invoice Image";
+        btn.disabled = false;
+      }).catch(err => {
+        console.error("Image generation error context array:", err);
+        btn.innerText = "Download Failed";
+        btn.disabled = false;
+      });
+    }
+
+    window.onload = function () {
+      setCurrentDefaults();
+      seedAutoValues();
+      processCalculations();
+    }
+  </script>
+</body>
+
+</html>

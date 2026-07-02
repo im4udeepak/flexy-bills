@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flexy Pages</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .tab-active {
+      background: linear-gradient(135deg, #0ea5e9, #2563eb);
+      color: #ffffff;
+      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.28);
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-100 text-slate-800">
+  <div class="mx-auto flex min-h-screen w-full max-w-10xl flex-col p-4 sm:p-6 lg:p-8">
+    <header class="mb-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+      <h1 class="text-2xl font-bold tracking-tight sm:text-3xl">Flexy Dashboard</h1>
+      <p class="mt-2 text-sm text-slate-600 sm:text-base">Switch between the available HTML pages using tabs below.</p>
+    </header>
+
+    <main class="flex-1 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-6">
+      <div class="mb-4 flex flex-wrap gap-2" role="tablist" aria-label="Page tabs">
+        <button type="button" class="tab-btn tab-active rounded-xl px-4 py-2 text-sm font-semibold transition" data-page="cloths-bill.html" aria-selected="true">Cloths Bill</button>
+        <button type="button" class="tab-btn rounded-xl bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200" data-page="course.html" aria-selected="false">Course</button>
+        <button type="button" class="tab-btn rounded-xl bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200" data-page="fuel-bill.html" aria-selected="false">Fuel Bill</button>
+        <button type="button" class="tab-btn rounded-xl bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200" data-page="internet-bill.html" aria-selected="false">Internet Bill</button>
+      </div>
+
+      <div class="mb-3 text-sm text-slate-600">
+        Current page: <span id="currentPage" class="font-semibold text-slate-900">cloths-bill.html</span>
+      </div>
+
+      <div class="overflow-hidden rounded-xl border border-slate-200">
+        <iframe
+          id="previewFrame"
+          src="cloths-bill.html"
+          title="Page Preview"
+          class="h-[70vh] w-full bg-white"
+        ></iframe>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const frame = document.getElementById('previewFrame');
+    const currentPage = document.getElementById('currentPage');
+
+    function setActiveTab(activeButton) {
+      tabButtons.forEach((button) => {
+        const isActive = button === activeButton;
+        button.classList.toggle('tab-active', isActive);
+        button.classList.toggle('bg-slate-100', !isActive);
+        button.classList.toggle('text-slate-700', !isActive);
+        button.classList.toggle('hover:bg-slate-200', !isActive);
+        button.setAttribute('aria-selected', String(isActive));
+      });
+    }
+
+    tabButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const targetPage = button.dataset.page;
+        frame.src = targetPage;
+        currentPage.textContent = targetPage;
+        setActiveTab(button);
+      });
+    });
+  </script>
+</body>
+</html>

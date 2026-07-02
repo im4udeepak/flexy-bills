@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Tax Invoice Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            gap: 20px;
+            max-width: 1400px;
+            margin: auto;
+        }
+
+        .form-box {
+            flex: 1;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+            height: fit-content;
+        }
+
+        .preview-box {
+            flex: 1.2;
+        }
+
+        h2 {
+            margin-top: 0;
+            border-bottom: 2px solid #2b3a82;
+            padding-bottom: 8px;
+            color: #2b3a82;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 13px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .product-row-form {
+            background: #f9f9f9;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+
+        .btn {
+            background-color: #2b3a82;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            background-color: #1e295d;
+        }
+
+        .btn-danger {
+            background-color: #cc0000;
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        .btn-danger:hover {
+            background-color: #990000;
+        }
+
+        /* Original Invoice Styling */
+        .invoice-box {
+            background-color: #fff;
+            padding: 30px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .header-table td {
+            vertical-align: top;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin: 0 0 10px 0;
+        }
+
+        .meta-info table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .meta-info td {
+            padding: 3px 0;
+        }
+
+        .meta-info td.label {
+            font-weight: bold;
+            width: 130px;
+        }
+
+        .address-section {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            border-top: 1px solid #000;
+            border-bottom: 1px solid #000;
+        }
+
+        .address-section th {
+            text-align: left;
+            background-color: #f9f9f9;
+            padding: 8px;
+            font-weight: bold;
+            border-bottom: 1px solid #000;
+            width: 50%;
+        }
+
+        .address-section td {
+            padding: 10px;
+            vertical-align: top;
+            line-height: 1.6;
+        }
+
+        .item-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .item-table th {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 8px;
+            font-size: 11px;
+            text-transform: uppercase;
+            vertical-align: middle;
+        }
+
+        .item-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            vertical-align: top;
+        }
+
+        .item-table .total-row td {
+            font-weight: bold;
+            background-color: #f9f9f9;
+            border-top: 2px solid #000;
+        }
+
+        .footer-section {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 30px;
+        }
+
+        .footer-section td {
+            vertical-align: top;
+        }
+
+        .declaration {
+            font-size: 11px;
+            line-height: 1.4;
+            padding-right: 20px;
+        }
+
+        .declaration .heading {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .signature-area {
+            text-align: center;
+            width: 220px;
+        }
+
+        .signature-container {
+            width: 160px;
+            height: 65px;
+            margin: 5px auto;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fake-signature {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            font-style: italic;
+            font-size: 26px;
+            color: #2b3a82;
+            letter-spacing: -1px;
+            transform: rotate(-4deg);
+            opacity: 0.85;
+            user-select: none;
+        }
+
+        .brand-footer {
+            margin-top: 30px;
+            border-top: 1px solid #ddd;
+            padding-top: 15px;
+            font-size: 11px;
+            color: #666;
+            text-align: center;
+        }
+
+        @media print {
+            .form-box {
+                display: none;
+            }
+
+            body {
+                padding: 0;
+                background-color: #fff;
+            }
+
+            .container {
+                display: block;
+            }
+
+            .invoice-box {
+                box-shadow: none;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="form-box">
+            <h2>Invoice Setup</h2>
+
+            <div class="form-group">
+                <label>Seller Details Name</label>
+                <input type="text" id="form-seller-name" value="Savadika Retail Private Limited"
+                    oninput="updateInvoice()">
+            </div>
+
+            <div class="form-group">
+                <label>Seller Address & Contact</label>
+                <textarea id="form-seller-address" rows="4"
+                    oninput="updateInvoice()">Ksquare Industrial Park, Warehouse 4,&#10;Before Padgha Toll naka,, Nashik-Mumbai Highway,&#10;Near Pushkar Mela Hotel Rahul Narkhede,&#10;Padgha-Bhiwandi, Thane, MAHARASHTRA - 421101</textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Invoice Date</label>
+                <input type="date" id="form-invoice-date" onchange="updateInvoice()">
+            </div>
+
+            <div class="form-group">
+                <label>Order Date</label>
+                <input type="date" id="form-order-date" onchange="updateInvoice()">
+            </div>
+
+            <h3>Products Line Items</h3>
+            <div id="form-products-container">
+            </div>
+
+            <button type="button" class="btn" style="margin-bottom: 20px; background-color: #4CAF50;"
+                onclick="addProductRow()">+ Add Product</button>
+            <br>
+            <button type="button" class="btn" onclick="window.print()">Print Invoice</button>
+        </div>
+
+        <div class="preview-box">
+            <div class="invoice-box">
+                <table class="header-table">
+                    <tr>
+                        <td>
+                            <h1 class="title">Tax Invoice</h1>
+                            <div class="meta-info">
+                                <table>
+                                    <tr>
+                                        <td class="label">Invoice Number:</td>
+                                        <td id="inv-number">12722SA001470621</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="label">Order Number:</td>
+                                        <td id="order-number">1177539-1440791-7268503</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="label">Invoice Date:</td>
+                                        <td id="inv-date">--</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="label">Order Date:</td>
+                                        <td id="order-date">--</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="label">Nature of Supply:</td>
+                                        <td>Goods</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="label">Transaction:</td>
+                                        <td>Inter-State</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="label">Place of Supply:</td>
+                                        <td>New Delhi</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+
+                <table class="address-section">
+                    <tr>
+                        <th>Seller Details</th>
+                        <th>Bill to / Ship to</th>
+                    </tr>
+                    <tr>
+                        <td>
+                            <strong id="preview-seller-name">Savadika Retail Private Limited</strong><br>
+                            <span id="preview-seller-address" style="white-space: pre-line;">1st Floor, Cabin No. DR-01,
+                                Building No.55, Panchkuian Road, Connaught Place, New Delhi, Delhi, 110001</span><br>
+                            <strong>GSTIN Number:</strong> <span id="preview-gstin">27AAXCS8821M1ZB</span>
+                        </td>
+                        <td>
+                            <strong>Deepak Sharma</strong><br>
+                            I-220 Shiv Ram Park, Gali No. 17<br>
+                            Nangloi Delhi - 110041<br>
+                            Delhi, India<br>
+                            <strong>Customer Type:</strong> Unregistered
+                        </td>
+                    </tr>
+                </table>
+
+                <table class="item-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 35%;">Product Description</th>
+                            <th style="text-align: center;">Qty</th>
+                            <th style="text-align: right;">Gross Amount</th>
+                            <th style="text-align: right;">Discount</th>
+                            <th style="text-align: right;">Taxable Amount</th>
+                            <th style="text-align: center;">CGST</th>
+                            <th style="text-align: center;">SGST/UGST</th>
+                            <th style="text-align: center;">IGST</th>
+                            <th style="text-align: center;">Cess</th>
+                            <th style="text-align: right;">Total Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="preview-items-body">
+                    </tbody>
+                </table>
+
+                <table class="footer-section">
+                    <tr>
+                        <td class="declaration">
+                            <div class="heading">DECLARATION</div>
+                            The goods sold as part of this shipment are intended for end-user consumption and are not
+                            for retail sale.<br><br>
+                            <strong>Reg Address:</strong> <span id="preview-seller-name-footer">Savadika Retail Private
+                                Limited</span>, <span id="preview-seller-address-footer">1st Floor, Cabin No. DR-01,
+                                Building No.55, Panchkuian Road, Connaught Place, New Delhi, Delhi, 110001</span><br>
+                            <strong>CIN No.</strong> U52100HR2016PTC066517
+                        </td>
+                        <td class="signature-area">
+                            <div style="font-weight: bold; margin-bottom: 5px;" id="signature-brand">Savadika Retail
+                                Private Limited</div>
+                            <div class="signature-container">
+                                <div class="fake-signature">A.N. Singh</div>
+                            </div>
+                            <div
+                                style="font-size: 11px; border-top: 1px solid #333; padding-top: 3px; width: 160px; margin: 0 auto;">
+                                Authorized Signatory</div>
+                        </td>
+                    </tr>
+                </table>
+
+                <div class="brand-footer">
+                    Purchase made on <strong>Myntra</strong><br>
+                    If you have any questions, feel free to call customer care at +91 80 6156 1999 or use Contact Us
+                    section in our App, or log on to <a href="https://www.myntra.com/contactus" target="_blank"
+                        style="color: #333; text-decoration: underline;">www.myntra.com/contactus</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock Auto-generated values established once on load
+        document.getElementById('inv-number').innerText = "INV" + Math.floor(Math.random() * 900000000 + 100000000);
+        document.getElementById('order-number').innerText = "ORD-" + Math.floor(Math.random() * 9000000) + "-" + Math.floor(Math.random() * 9000000);
+        document.getElementById('preview-gstin').innerText = Math.floor(Math.random() * 99) + "AAXCS" + Math.floor(Math.random() * 9000) + "M1ZB";
+
+        // Standard starting items array
+        let products = [
+            { desc: "Roadster Men Black Round Neck T-shirt with Striped Sleeves, Size: XL", qty: 1, gross: 699, discount: 144.76, gstRate: 5 }
+        ];
+
+        function init() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('form-invoice-date').value = today;
+            document.getElementById('form-order-date').value = today;
+            renderFormRows();
+            updateInvoice();
+        }
+
+        function renderFormRows() {
+            const container = document.getElementById('form-products-container');
+            container.innerHTML = '';
+            products.forEach((prod, index) => {
+                const row = document.createElement('div');
+                row.className = 'product-row-form';
+                row.innerHTML = `
+                <div class="form-group">
+                    <label>Product Description</label>
+                    <input type="text" value="${prod.desc}" oninput="updateProductData(${index}, 'desc', this.value)">
+                </div>
+                <div class="product-grid">
+                    <div>
+                        <label>Qty</label>
+                        <input type="number" value="${prod.qty}" min="1" oninput="updateProductData(${index}, 'qty', this.value)">
+                    </div>
+                    <div>
+                        <label>Gross Price</label>
+                        <input type="number" value="${prod.gross}" min="0" step="0.01" oninput="updateProductData(${index}, 'gross', this.value)">
+                    </div>
+                    <div>
+                        <label>Discount</label>
+                        <input type="number" value="${prod.discount}" min="0" step="0.01" oninput="updateProductData(${index}, 'discount', this.value)">
+                    </div>
+                    <div>
+                        <label>GST Rate</label>
+                        <select onchange="updateProductData(${index}, 'gstRate', this.value)">
+                            <option value="0" ${prod.gstRate == 0 ? 'selected' : ''}>0%</option>
+                            <option value="5" ${prod.gstRate == 5 ? 'selected' : ''}>5%</option>
+                            <option value="12" ${prod.gstRate == 12 ? 'selected' : ''}>12%</option>
+                            <option value="18" ${prod.gstRate == 18 ? 'selected' : ''}>18%</option>
+                            <option value="28" ${prod.gstRate == 28 ? 'selected' : ''}>28%</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: flex-end;">
+                        <button type="button" class="btn btn-danger" onclick="removeProductRow(${index})">Delete</button>
+                    </div>
+                </div>
+            `;
+                container.appendChild(row);
+            });
+        }
+
+        function addProductRow() {
+            products.push({ desc: "New Premium Apparel Apparel Product Item Line", qty: 1, gross: 500, discount: 0, gstRate: 5 });
+            renderFormRows();
+            updateInvoice();
+        }
+
+        function removeProductRow(index) {
+            products.splice(index, 1);
+            renderFormRows();
+            updateInvoice();
+        }
+
+        function updateProductData(index, field, value) {
+            if (field === 'desc') products[index].desc = value;
+            else products[index][field] = parseFloat(value) || 0;
+            updateInvoice();
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const d = new Date(dateString);
+            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            return `${String(d.getDate()).padStart(2, '0')} ${months[d.getMonth()]} ${d.getFullYear()}`;
+        }
+
+        function updateInvoice() {
+            // Update Seller context
+            // Get the values from the form inputs
+            const sellerName = document.getElementById('form-seller-name').value;
+            const sellerAddress = document.getElementById('form-seller-address').value;
+
+            // Update Top Address Layout
+            document.getElementById('preview-seller-name').innerText = sellerName;
+            document.getElementById('preview-seller-address').innerText = sellerAddress;
+
+            // Update Footer Layout (Fixes the bug)
+            document.getElementById('preview-seller-name-footer').innerText = sellerName;
+            document.getElementById('preview-seller-address-footer').innerText = sellerAddress;
+            document.getElementById('signature-brand').innerText = sellerName;
+
+            // Update Dates context
+            document.getElementById('inv-date').innerText = formatDate(document.getElementById('form-invoice-date').value);
+            document.getElementById('order-date').innerText = formatDate(document.getElementById('form-order-date').value);
+
+            // Calculate and Process Products
+            const tbody = document.getElementById('preview-items-body');
+            tbody.innerHTML = '';
+
+            let totalQty = 0;
+            let totalGross = 0;
+            let totalDiscount = 0;
+            let totalTaxable = 0;
+            let totalIGST = 0;
+            let grandTotal = 0;
+
+            products.forEach(prod => {
+                const extendedGross = prod.gross * prod.qty;
+                const extendedDiscount = prod.discount;
+                const taxableAmount = Math.max(0, extendedGross - extendedDiscount);
+
+                // Tax parsing structure mirroring the original invoice logic (Interstate / IGST)
+                const igstAmount = (taxableAmount * (prod.gstRate / 100));
+                const totalAmount = taxableAmount + igstAmount;
+
+                totalQty += prod.qty;
+                totalGross += extendedGross;
+                totalDiscount += extendedDiscount;
+                totalTaxable += taxableAmount;
+                totalIGST += igstAmount;
+                grandTotal += totalAmount;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                <td>
+                    ${prod.desc}<br>
+                    <small>HSN: 61091000, ${prod.gstRate.toFixed(1)}% IGST</small>
+                </td>
+                <td style="text-align: center;">${prod.qty}</td>
+                <td style="text-align: right;">Rs ${extendedGross.toFixed(2)}</td>
+                <td style="text-align: right;">Rs ${extendedDiscount.toFixed(2)}</td>
+                <td style="text-align: right;">Rs ${taxableAmount.toFixed(2)}</td>
+                <td style="text-align: center;">Rs 0.00</td>
+                <td style="text-align: center;">Rs 0.00</td>
+                <td style="text-align: center;">Rs ${igstAmount.toFixed(2)}</td>
+                <td style="text-align: center;">-</td>
+                <td style="text-align: right;">Rs ${totalAmount.toFixed(2)}</td>
+            `;
+                tbody.appendChild(tr);
+            });
+
+            // Append Total Summary Row
+            const totalTr = document.createElement('tr');
+            totalTr.className = 'total-row';
+            totalTr.innerHTML = `
+            <td>TOTAL</td>
+            <td style="text-align: center;">${totalQty}</td>
+            <td style="text-align: right;">Rs ${totalGross.toFixed(2)}</td>
+            <td style="text-align: right;">Rs ${totalDiscount.toFixed(2)}</td>
+            <td style="text-align: right;">Rs ${totalTaxable.toFixed(2)}</td>
+            <td style="text-align: center;">Rs 0.00</td>
+            <td style="text-align: center;">Rs 0.00</td>
+            <td style="text-align: center;">Rs ${totalIGST.toFixed(2)}</td>
+            <td style="text-align: center;">Rs 0.00</td>
+            <td style="text-align: right;">Rs ${grandTotal.toFixed(2)}</td>
+        `;
+            tbody.appendChild(totalTr);
+        }
+
+        // Launch configuration on document complete
+        window.onload = init;
+    </script>
+</body>
+
+</html>
