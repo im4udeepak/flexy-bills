@@ -5,8 +5,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tax Invoice Generator - Unacademy</title>
-  <!-- Included html2canvas library to generate the image -->
+  <link rel="stylesheet" href="suggestion-chatbot.css">
+  <!-- html2canvas + jsPDF for invoice PDF download -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     :root {
       --primary-color: #1d2939;
@@ -62,7 +64,8 @@
     }
 
     .form-group input,
-    .form-group textarea {
+    .form-group textarea,
+    .form-group select {
       width: 100%;
       padding: 10px;
       border: 1px solid #d0d5dd;
@@ -269,28 +272,61 @@
     <h2>Invoice Controls</h2>
 
     <div class="form-group">
+      <label for="input-customer-name">Customer Name</label>
+      <input type="text" id="input-customer-name" data-testid="course_customer_name_input"
+        value="Deepak Sharma" oninput="processCalculations()">
+    </div>
+
+    <div class="form-group">
+      <label for="input-customer-email">Customer Email</label>
+      <input type="email" id="input-customer-email" data-testid="course_customer_email_input"
+        value="deepaksharma.1897@gmail.com" oninput="processCalculations()">
+    </div>
+
+    <div class="form-group">
+      <label for="input-customer-phone">Customer Phone</label>
+      <input type="text" id="input-customer-phone" data-testid="course_customer_phone_input"
+        value="7532944234" oninput="processCalculations()">
+    </div>
+
+    <div class="form-group">
+      <label for="input-customer-city">Customer City</label>
+      <input type="text" id="input-customer-city" data-testid="course_customer_city_input"
+        value="Delhi" oninput="processCalculations()">
+    </div>
+
+    <div class="form-group">
       <label for="input-inv-date">Invoice Date</label>
-      <input type="date" id="input-inv-date" onchange="processCalculations()">
+      <input type="date" id="input-inv-date" data-testid="course_invoice_date_input"
+        onchange="processCalculations()">
     </div>
 
     <div class="form-group">
       <label for="input-pay-time">Payment Date & Time</label>
-      <input type="datetime-local" id="input-pay-time" onchange="processCalculations()">
+      <input type="datetime-local" id="input-pay-time" data-testid="course_payment_time_input"
+        onchange="processCalculations()">
+    </div>
+
+    <div class="form-group">
+      <label for="input-course-select">Course (Dropdown)</label>
+      <select id="input-course-select" data-testid="course_select_dropdown"
+        onchange="applySelectedCourse()"></select>
     </div>
 
     <div class="form-group">
       <label for="input-product">Course / Purchase Description</label>
-      <textarea id="input-product" rows="2" oninput="processCalculations()">JEE Advanced 2023 purchase</textarea>
+      <textarea id="input-product" data-testid="course_product_input" rows="2"
+        oninput="processCalculations()">JEE Advanced 2023 purchase</textarea>
     </div>
 
     <div class="form-group">
       <label for="input-total">Total Price (₹)</label>
-      <input type="number" id="input-total" value="3999" min="0" step="0.01" oninput="processCalculations()">
+      <input type="number" id="input-total" data-testid="course_total_price_input" value="3999" min="0"
+        step="0.01" oninput="processCalculations()">
     </div>
 
-    <!-- Trigger function rewritten to generate image asset download link loops -->
-    <button type="button" class="btn-print" id="btn-download" onclick="generateInvoiceImage()">Download Invoice
-      Image</button>
+    <button type="button" class="btn-print" id="btn-download" data-testid="course_download_pdf_button"
+      onclick="generateInvoicePdf()">Download Invoice PDF</button>
   </div>
 
   <!-- Live Invoice Canvas Box -->
@@ -334,10 +370,11 @@
 
         <div class="info-block">
           <h3>Invoice for</h3>
-          <p style="font-weight: 700; color: var(--primary-color);">Deepak Sharma</p>
-          <p>deepaksharma.1897@gmail.com</p>
-          <p>7532944234</p>
-          <p>Delhi</p>
+          <p id="lbl-customer-name" data-testid="course_customer_name_text"
+            style="font-weight: 700; color: var(--primary-color);">Deepak Sharma</p>
+          <p id="lbl-customer-email" data-testid="course_customer_email_text">deepaksharma.1897@gmail.com</p>
+          <p id="lbl-customer-phone" data-testid="course_customer_phone_text">7532944234</p>
+          <p id="lbl-customer-city" data-testid="course_customer_city_text">Delhi</p>
         </div>
       </div>
 
@@ -409,7 +446,41 @@
 
   </div>
 
+  <script src="form-storage.js"></script>
+  <script src="courses-catalog.js"></script>
+  <script src="suggestion-chatbot.js"></script>
   <script>
+    function populateCourseDropdown() {
+      const select = document.getElementById('input-course-select');
+      const catalog = Array.isArray(window.COURSE_CATALOG) ? window.COURSE_CATALOG : [];
+      select.innerHTML = '';
+
+      catalog.forEach((course) => {
+        const option = document.createElement('option');
+        option.value = course.id;
+        option.textContent = `${course.name} — ₹${course.price}`;
+        option.setAttribute('data-name', course.name);
+        option.setAttribute('data-price', String(course.price));
+        select.appendChild(option);
+      });
+
+      const defaultCourse = catalog.find((c) => c.name === 'JEE Advanced 2023 purchase') || catalog[0];
+      if (defaultCourse) {
+        select.value = defaultCourse.id;
+        document.getElementById('input-product').value = defaultCourse.name;
+        document.getElementById('input-total').value = defaultCourse.price;
+      }
+    }
+
+    function applySelectedCourse() {
+      const select = document.getElementById('input-course-select');
+      const option = select.options[select.selectedIndex];
+      if (!option) return;
+      document.getElementById('input-product').value = option.getAttribute('data-name') || option.textContent;
+      document.getElementById('input-total').value = option.getAttribute('data-price') || 0;
+      processCalculations();
+    }
+
     function setCurrentDefaults() {
       const now = new Date();
       const localDate = now.toISOString().split('T')[0];
@@ -459,6 +530,15 @@
 
     // Dynamic processing calculations engine updating reverse logic taxes
     function processCalculations() {
+      document.getElementById('lbl-customer-name').innerText =
+        document.getElementById('input-customer-name').value;
+      document.getElementById('lbl-customer-email').innerText =
+        document.getElementById('input-customer-email').value;
+      document.getElementById('lbl-customer-phone').innerText =
+        document.getElementById('input-customer-phone').value;
+      document.getElementById('lbl-customer-city').innerText =
+        document.getElementById('input-customer-city').value;
+
       const baseDate = document.getElementById('input-inv-date').value;
       document.getElementById('lbl-invoice-date').innerText = parseDisplayDate(baseDate);
 
@@ -478,46 +558,87 @@
       document.getElementById('lbl-grand-total').innerText = "₹" + inputTotal.toFixed(2);
     }
 
-    // New isolation handler converting canvas nodes into images on programmatic execution requests
-    function generateInvoiceImage() {
+    function generateInvoicePdf() {
       const targetElement = document.getElementById('invoice-capture-zone');
       const btn = document.getElementById('btn-download');
 
-      btn.innerText = "Generating Image...";
+      btn.innerText = "Generating PDF...";
       btn.disabled = true;
 
-      // Configurations forcing high-fidelity clear text vectors scaling engine layouts
       html2canvas(targetElement, {
-        scale: 2, // Doubles resolution clarity matrix elements
+        scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff'
       }).then(canvas => {
-        const imageURL = canvas.toDataURL("image/png");
+        const imgData = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4'
+        });
 
-        // Setup anchor element lifecycle tracking arrays 
-        const downloadLink = document.createElement('a');
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const margin = 8;
+        const usableWidth = pageWidth - margin * 2;
+        const imgHeight = (canvas.height * usableWidth) / canvas.width;
+        const renderHeight = Math.min(imgHeight, pageHeight - margin * 2);
+
+        pdf.addImage(imgData, 'PNG', margin, margin, usableWidth, renderHeight);
+
         const invoiceNo = document.getElementById('lbl-invoice-no').innerText.replace("/", "_");
+        pdf.save(`Invoice_${invoiceNo}.pdf`);
 
-        downloadLink.href = imageURL;
-        downloadLink.download = `Invoice_${invoiceNo}.png`;
-
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
-
-        btn.innerText = "Download Invoice Image";
+        btn.innerText = "Download Invoice PDF";
         btn.disabled = false;
       }).catch(err => {
-        console.error("Image generation error context array:", err);
+        console.error("PDF generation error:", err);
         btn.innerText = "Download Failed";
         btn.disabled = false;
       });
     }
 
     window.onload = function () {
+      populateCourseDropdown();
+      const courseStorage = FormStorage.bind({
+        pageKey: 'course',
+        fields: [
+          'input-customer-name',
+          'input-customer-email',
+          'input-customer-phone',
+          'input-customer-city',
+          'input-course-select',
+          'input-product',
+          'input-total'
+        ],
+        sharedMap: {
+          'input-customer-name': 'customerName',
+          'input-customer-email': 'customerEmail',
+          'input-customer-phone': 'customerPhone',
+          'input-customer-city': 'customerCity'
+        },
+        onChange: function () {
+          processCalculations();
+        }
+      });
       setCurrentDefaults();
       seedAutoValues();
       processCalculations();
+      SuggestionChatbot.init({
+        mode: 'course',
+        onApply: function (item) {
+          document.getElementById('input-product').value = item.name;
+          document.getElementById('input-total').value = item.price;
+          const select = document.getElementById('input-course-select');
+          const match = Array.from(select.options).find((opt) => opt.value === item.id);
+          if (match) {
+            select.value = item.id;
+          }
+          courseStorage.persist();
+          processCalculations();
+        }
+      });
     }
   </script>
 </body>

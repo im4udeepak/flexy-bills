@@ -4,6 +4,8 @@
     <meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type" />
     <title>Dynamic ACT Invoice Generator</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="form-storage.js"></script>
     <style>
         /* Interactive Control Panel Box Styles */
         #control-panel {
@@ -121,31 +123,74 @@
             </div>
             <div class="form-group">
                 <label for="input-base-amount">Base Amount (For 30 Days)</label>
-                <input type="number" id="input-base-amount" value="2200" step="0.01">
+                <input type="number" id="input-base-amount" data-testid="internet_base_amount_input"
+                    value="2200" step="0.01">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="input-customer-name">Customer Name</label>
+                <input type="text" id="input-customer-name" data-testid="internet_customer_name_input"
+                    value="Deepak . .">
+            </div>
+            <div class="form-group">
+                <label for="input-customer-address">Address</label>
+                <input type="text" id="input-customer-address" data-testid="internet_customer_address_input"
+                    value="I-220 Shivraam Park">
+            </div>
+            <div class="form-group">
+                <label for="input-customer-city">City</label>
+                <input type="text" id="input-customer-city" data-testid="internet_customer_city_input"
+                    value="Delhi">
+            </div>
+            <div class="form-group">
+                <label for="input-customer-state">State</label>
+                <input type="text" id="input-customer-state" data-testid="internet_customer_state_input"
+                    value="Delhi">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="input-customer-country">Country</label>
+                <input type="text" id="input-customer-country" data-testid="internet_customer_country_input"
+                    value="India">
+            </div>
+            <div class="form-group">
+                <label for="input-customer-pincode">Pincode</label>
+                <input type="text" id="input-customer-pincode" data-testid="internet_customer_pincode_input"
+                    value="110041">
+            </div>
+            <div class="form-group">
+                <label for="input-customer-phone">Home Phone</label>
+                <input type="text" id="input-customer-phone" data-testid="internet_customer_phone_input"
+                    value="7532944234">
             </div>
         </div>
 
         <div class="form-row">
             <div class="form-group">
                 <label>Calculated Invoice Date (Auto)</label>
-                <input type="text" id="input-invoice-date" readonly>
+                <input type="text" id="input-invoice-date" data-testid="internet_invoice_date_input" readonly>
             </div>
             <div class="form-group">
                 <label>Calculated Due Date (Auto)</label>
-                <input type="text" id="input-due-date" readonly>
+                <input type="text" id="input-due-date" data-testid="internet_due_date_input" readonly>
             </div>
             <div class="form-group">
                 <label>Calculated Plan From (Auto)</label>
-                <input type="text" id="input-from-date" readonly>
+                <input type="text" id="input-from-date" data-testid="internet_from_date_input" readonly>
             </div>
             <div class="form-group">
                 <label>Calculated Plan To (Auto)</label>
-                <input type="text" id="input-to-date" readonly>
+                <input type="text" id="input-to-date" data-testid="internet_to_date_input" readonly>
             </div>
         </div>
         
         <div style="text-align: right; margin-top: 10px;">
-            <button id="download-btn" onclick="downloadBillAsImage()">Generate & Download JPEG</button>
+            <button id="download-btn" data-testid="internet_download_pdf_button"
+                onclick="downloadBillAsPdf()">Generate & Download PDF</button>
         </div>
     </div>
 
@@ -175,15 +220,15 @@
                                                 <tr>
                                                     <td style="font-family:Arial, Helvetica, sans-serif; font-size:20px; color:#ed3036; font-weight:bold;">
                                                         <span><img style="height:20px; width:20px; vertical-align:text-top;" alt="profile" src="https://img.actcorp.in/mailers/soaimg/Profile.png" /></span>
-                                                        <span style="line-height: 25px;">Deepak . .</span>
+                                                        <span id="display-customer-name" data-testid="internet_customer_name_text" style="line-height: 25px;">Deepak . .</span>
                                                     </td>
                                                 </tr>
-                                                <tr><td style="font-family:Arial, Helvetica, sans-serif; color: #77787b; font-size: 12px;">I-220 Shivraam Park</td></tr>
-                                                <tr><td style="font-family:Arial, Helvetica, sans-serif; color: #77787b; font-size: 12px;">Delhi</td></tr>
-                                                <tr><td style="font-family:Arial, Helvetica, sans-serif; color: #77787b; font-size: 12px;">Delhi</td></tr>
-                                                <tr><td style="font-family:Arial, Helvetica, sans-serif; color: #77787b; font-size: 12px;">India</td></tr>
-                                                <tr><td style="font-family:Arial, Helvetica, sans-serif; color: #77787b; font-size: 12px;">110041</td></tr>
-                                                <tr><td style="font-family:Arial, Helvetica, sans-serif; color: #77787b; font-size: 12px;">Home : 7532944234</td></tr>
+                                                <tr><td id="display-customer-address" data-testid="internet_customer_address_text" style="font-family:Arial, Helvetica, sans-serif; color: #77787b; font-size: 12px;">I-220 Shivraam Park</td></tr>
+                                                <tr><td id="display-customer-city" data-testid="internet_customer_city_text" style="font-family:Arial, Helvetica, sans-serif; color: #77787b; font-size: 12px;">Delhi</td></tr>
+                                                <tr><td id="display-customer-state" data-testid="internet_customer_state_text" style="font-family:Arial, Helvetica, sans-serif; color: #77787b; font-size: 12px;">Delhi</td></tr>
+                                                <tr><td id="display-customer-country" data-testid="internet_customer_country_text" style="font-family:Arial, Helvetica, sans-serif; color: #77787b; font-size: 12px;">India</td></tr>
+                                                <tr><td id="display-customer-pincode" data-testid="internet_customer_pincode_text" style="font-family:Arial, Helvetica, sans-serif; color: #77787b; font-size: 12px;">110041</td></tr>
+                                                <tr><td id="display-customer-phone" data-testid="internet_customer_phone_text" style="font-family:Arial, Helvetica, sans-serif; color: #77787b; font-size: 12px;">Home : 7532944234</td></tr>
                                                 <tr><td style="font-family:Arial, Helvetica, sans-serif; color: #77787b; font-size: 12px;">Mobile : </td></tr>
                                                 <tr><td style="font-family:Arial, Helvetica, sans-serif; color: #77787b; font-size: 12px;">User Id : 110710622756</td></tr>
                                                 <tr><td style="font-family:Arial, Helvetica, sans-serif; color: #77787b; font-size: 12px;">Account No : 110710622756</td></tr>
@@ -621,6 +666,22 @@
             document.getElementById('input-from-date').value = formatDateToDisplay(planFromDate);
             document.getElementById('input-to-date').value = formatDateToDisplay(planToDate);
 
+            // Sync customer profile fields
+            const customerPhone = document.getElementById('input-customer-phone').value;
+            document.getElementById('display-customer-name').innerText =
+                document.getElementById('input-customer-name').value;
+            document.getElementById('display-customer-address').innerText =
+                document.getElementById('input-customer-address').value;
+            document.getElementById('display-customer-city').innerText =
+                document.getElementById('input-customer-city').value;
+            document.getElementById('display-customer-state').innerText =
+                document.getElementById('input-customer-state').value;
+            document.getElementById('display-customer-country').innerText =
+                document.getElementById('input-customer-country').value;
+            document.getElementById('display-customer-pincode').innerText =
+                document.getElementById('input-customer-pincode').value;
+            document.getElementById('display-customer-phone').innerText = `Home : ${customerPhone}`;
+
             // Sync structural invoice layout print fields
             document.getElementById('display-billing-period').innerText = `${selectedMonthStr}, ${yearVal}`;
             document.getElementById('display-invoice-date').innerText = formatDateToDisplay(invoiceDate);
@@ -657,40 +718,56 @@
             document.querySelectorAll('.val-total-pure').forEach(el => el.innerText = txtTotal);
         }
 
-        // Image artifact exporter engine script 
-        function downloadBillAsImage() {
+        function downloadBillAsPdf() {
             const captureTarget = document.getElementById('bill-capture-area');
             const downloadButton = document.getElementById('download-btn');
             
-            downloadButton.innerText = "Generating...";
+            downloadButton.innerText = "Generating PDF...";
             downloadButton.disabled = true;
 
             html2canvas(captureTarget, {
-                scale: 2, // Enhances target canvas graphic layout crispness
-                useCORS: true, 
+                scale: 2,
+                useCORS: true,
                 allowTaint: true,
                 backgroundColor: "#ffffff"
             }).then(canvas => {
-                const imageBase64Data = canvas.toDataURL('image/jpeg', 0.95);
-                const fileActionAnchor = document.createElement('a');
-                fileActionAnchor.href = imageBase64Data;
-                
+                const imgData = canvas.toDataURL('image/png');
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
+                const margin = 6;
+                const usableWidth = pageWidth - margin * 2;
+                let imgHeight = (canvas.height * usableWidth) / canvas.width;
+                let heightLeft = imgHeight;
+                let position = margin;
+
+                pdf.addImage(imgData, 'PNG', margin, position, usableWidth, imgHeight);
+                heightLeft -= (pageHeight - margin * 2);
+
+                while (heightLeft > 0) {
+                    position = heightLeft - imgHeight + margin;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', margin, position, usableWidth, imgHeight);
+                    heightLeft -= (pageHeight - margin * 2);
+                }
+
                 const monthSelect = document.getElementById('input-bill-month');
                 const chosenMonthName = monthSelect.options[monthSelect.selectedIndex].text;
                 const chosenYear = document.getElementById('input-bill-year').value;
-                
-                fileActionAnchor.download = `ACT_Invoice_${chosenMonthName}_${chosenYear}.jpeg`;
-                
-                document.body.appendChild(fileActionAnchor);
-                fileActionAnchor.click();
-                document.body.removeChild(fileActionAnchor);
+                pdf.save(`ACT_Invoice_${chosenMonthName}_${chosenYear}.pdf`);
 
-                downloadButton.innerText = "Generate & Download JPEG";
+                downloadButton.innerText = "Generate & Download PDF";
                 downloadButton.disabled = false;
             }).catch(err => {
-                console.error("Rendering failed:", err);
-                alert("An error occurred during image conversion.");
-                downloadButton.innerText = "Generate & Download JPEG";
+                console.error("PDF generation failed:", err);
+                alert("An error occurred during PDF conversion.");
+                downloadButton.innerText = "Generate & Download PDF";
                 downloadButton.disabled = false;
             });
         }
@@ -705,6 +782,31 @@
         // Bootstrap engine calculation defaults execution
         window.onload = function () {
             setCurrentBillingDefaults();
+            FormStorage.bind({
+                pageKey: 'internet',
+                fields: [
+                    'input-bill-month',
+                    'input-bill-year',
+                    'input-base-amount',
+                    'input-customer-name',
+                    'input-customer-address',
+                    'input-customer-city',
+                    'input-customer-state',
+                    'input-customer-country',
+                    'input-customer-pincode',
+                    'input-customer-phone'
+                ],
+                sharedMap: {
+                    'input-customer-name': 'customerName',
+                    'input-customer-phone': 'customerPhone',
+                    'input-customer-city': 'customerCity',
+                    'input-customer-address': 'customerStreet',
+                    'input-customer-pincode': 'customerPincode'
+                },
+                onChange: function () {
+                    calculateAndPopulateInvoice();
+                }
+            });
             calculateAndPopulateInvoice();
         };
     </script>

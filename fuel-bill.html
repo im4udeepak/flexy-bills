@@ -24,6 +24,8 @@
             position: fixed;
             left: 20px;
             top: 20px;
+            height: 80%;
+            overflow-y: auto;
 
         }
 
@@ -33,15 +35,24 @@
             display: block;
             margin-bottom: 10px;
             padding: 8px;
-            width: 200px;
+            width: 260px;
 
         }
 
+        .controls label {
+            display: block;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
 
         button {
 
             padding: 10px 20px;
             cursor: pointer;
+            margin-bottom: 8px;
+            display: block;
 
         }
 
@@ -195,29 +206,45 @@
 
     <div class="controls">
 
+        <label for="station-line1">Station Address Line 1</label>
+        <input id="station-line1" data-testid="fuel_station_line1_input"
+            value="Sagar Automobiles Plot No" oninput="generate()">
 
-        <input id="customer" placeholder="Customer Name" value="Deepak Sharma" readonly>
+        <label for="station-line2">Station Address Line 2</label>
+        <input id="station-line2" data-testid="fuel_station_line2_input"
+            value="PP 1, Sector 15, Noida" oninput="generate()">
 
+        <label for="station-pincode">Station Pincode</label>
+        <input id="station-pincode" data-testid="fuel_station_pincode_input"
+            value="201301" oninput="generate()">
 
-        <input id="rate" type="number" step="0.01" placeholder="Current Fuel Price (Rate/LTR)">
+        <label for="vehicle-no">Vehicle No</label>
+        <input id="vehicle-no" data-testid="fuel_vehicle_no_input"
+            value="DL4SDU5759" oninput="generate()">
 
+        <label for="customer">Customer Name</label>
+        <input id="customer" data-testid="fuel_customer_name_input"
+            placeholder="Customer Name" value="Deepak Sharma" oninput="generate()">
 
-        <input id="amountPaid" type="number" step="0.01" placeholder="Amount Paid (INR)">
+        <label for="rate">Fuel Rate (₹/LTR)</label>
+        <input id="rate" data-testid="fuel_rate_input" type="number" step="0.01"
+            placeholder="Current Fuel Price (Rate/LTR)">
 
+        <label for="amountPaid">Amount Paid (INR)</label>
+        <input id="amountPaid" data-testid="fuel_amount_paid_input" type="number" step="0.01"
+            placeholder="Amount Paid (INR)">
 
-        <input id="date" type="datetime-local">
+        <label for="date">Date & Time</label>
+        <input id="date" data-testid="fuel_date_input" type="datetime-local">
 
-
-        <button onclick="generate()">
+        <button type="button" data-testid="fuel_generate_button" onclick="generate()">
             Generate Receipt
         </button>
 
-
-        <button onclick="downloadJPG()">
-            Download JPG
+        <button type="button" id="btn-download" data-testid="fuel_download_pdf_button"
+            onclick="downloadPDF()">
+            Download PDF
         </button>
-
-
 
     </div>
 
@@ -261,11 +288,11 @@
             </div>
 
 
-            <div>Sagar Automobiles Plot No</div>
+            <div id="show-station-line1" data-testid="fuel_station_line1_text">Sagar Automobiles Plot No</div>
 
-            <div>PP 1, Sector 15, Noida</div>
+            <div id="show-station-line2" data-testid="fuel_station_line2_text">PP 1, Sector 15, Noida</div>
 
-            <div>201301</div>
+            <div id="show-station-pincode" data-testid="fuel_station_pincode_text">201301</div>
 
             <div>Tel. No.: 2803910</div>
 
@@ -423,7 +450,7 @@
                 VEH NO:
             </span>
 
-            <span>
+            <span id="showVehicleNo" data-testid="fuel_vehicle_no_text">
                 DL4SDU5759
             </span>
 
@@ -442,7 +469,7 @@
             </span>
 
 
-            <span id="showCustomer"></span>
+            <span id="showCustomer" data-testid="fuel_customer_name_text"></span>
 
 
         </div>
@@ -590,6 +617,7 @@
 
 
 
+    <script src="form-storage.js"></script>
     <script>
 
 
@@ -651,6 +679,15 @@
             }
 
 
+            document.getElementById("show-station-line1").innerText =
+                document.getElementById("station-line1").value;
+            document.getElementById("show-station-line2").innerText =
+                document.getElementById("station-line2").value;
+            document.getElementById("show-station-pincode").innerText =
+                document.getElementById("station-pincode").value;
+            document.getElementById("showVehicleNo").innerText =
+                document.getElementById("vehicle-no").value;
+
 
             document.getElementById("receiptNo")
                 .innerHTML =
@@ -710,6 +747,24 @@
 
         window.onload = function () {
             setCurrentDateTime();
+            FormStorage.bind({
+                pageKey: 'fuel',
+                fields: [
+                    'station-line1',
+                    'station-line2',
+                    'station-pincode',
+                    'vehicle-no',
+                    'customer',
+                    'rate',
+                    'amountPaid'
+                ],
+                sharedMap: {
+                    'customer': 'customerName'
+                },
+                onChange: function () {
+                    generate();
+                }
+            });
             generate();
 
             document.getElementById("rate").addEventListener("input", generate);
@@ -723,35 +778,44 @@
 
 
 
-        function downloadJPG() {
+        function downloadPDF() {
+            const targetElement = document.getElementById("receipt");
+            const btn = document.getElementById("btn-download");
 
+            btn.innerText = "Generating PDF...";
+            btn.disabled = true;
 
-            html2canvas(
-                document.getElementById("receipt")
-            )
-                .then(canvas => {
-
-
-                    let link =
-                        document.createElement("a");
-
-
-                    link.download =
-                        "fuel-receipt.jpg";
-
-
-                    link.href =
-                        canvas.toDataURL(
-                            "image/jpeg"
-                        );
-
-
-                    link.click();
-
-
+            html2canvas(targetElement, {
+                scale: 2,
+                useCORS: true,
+                backgroundColor: "#ffffff"
+            }).then(canvas => {
+                const imgData = canvas.toDataURL("image/png");
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({
+                    orientation: "portrait",
+                    unit: "mm",
+                    format: "a4"
                 });
 
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
+                const margin = 10;
+                const usableWidth = Math.min(pageWidth - margin * 2, 90);
+                const imgHeight = (canvas.height * usableWidth) / canvas.width;
+                const renderHeight = Math.min(imgHeight, pageHeight - margin * 2);
+                const x = (pageWidth - usableWidth) / 2;
 
+                pdf.addImage(imgData, "PNG", x, margin, usableWidth, renderHeight);
+                pdf.save("fuel-receipt.pdf");
+
+                btn.innerText = "Download PDF";
+                btn.disabled = false;
+            }).catch(err => {
+                console.error("PDF generation error:", err);
+                btn.innerText = "Download Failed";
+                btn.disabled = false;
+            });
         }
 
 
@@ -759,6 +823,7 @@
 
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 
 </body>

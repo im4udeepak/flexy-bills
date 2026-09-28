@@ -5,6 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Tax Invoice Generator</title>
+    <link rel="stylesheet" href="suggestion-chatbot.css">
+    <script src="form-storage.js"></script>
+    <script src="clothes-catalog.js"></script>
+    <script src="suggestion-chatbot.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -279,24 +283,60 @@
 
             <div class="form-group">
                 <label>Seller Details Name</label>
-                <input type="text" id="form-seller-name" value="Savadika Retail Private Limited"
-                    oninput="updateInvoice()">
+                <input type="text" id="form-seller-name" data-testid="cloths_seller_name_input"
+                    value="Savadika Retail Private Limited" oninput="updateInvoice()">
             </div>
 
             <div class="form-group">
                 <label>Seller Address & Contact</label>
-                <textarea id="form-seller-address" rows="4"
+                <textarea id="form-seller-address" data-testid="cloths_seller_address_input" rows="4"
                     oninput="updateInvoice()">Ksquare Industrial Park, Warehouse 4,&#10;Before Padgha Toll naka,, Nashik-Mumbai Highway,&#10;Near Pushkar Mela Hotel Rahul Narkhede,&#10;Padgha-Bhiwandi, Thane, MAHARASHTRA - 421101</textarea>
             </div>
 
             <div class="form-group">
+                <label>Bill To / Ship To Name</label>
+                <input type="text" id="form-customer-name" data-testid="cloths_customer_name_input"
+                    value="Deepak Sharma" oninput="updateInvoice()">
+            </div>
+
+            <div class="form-group">
+                <label>Bill To / Ship To Address</label>
+                <textarea id="form-customer-address" data-testid="cloths_customer_address_input" rows="4"
+                    oninput="updateInvoice()">I-220 Shiv Ram Park, Gali No. 17&#10;Nangloi Delhi - 110041&#10;Delhi, India</textarea>
+            </div>
+
+            <div class="form-group">
                 <label>Invoice Date</label>
-                <input type="date" id="form-invoice-date" onchange="updateInvoice()">
+                <input type="date" id="form-invoice-date" data-testid="cloths_invoice_date_input"
+                    onchange="updateInvoice()">
             </div>
 
             <div class="form-group">
                 <label>Order Date</label>
                 <input type="date" id="form-order-date" onchange="updateInvoice()">
+            </div>
+
+            <h3>Product Suggestions</h3>
+            <div class="form-group">
+                <label for="input-cloth-gender">Gender Filter</label>
+                <select id="input-cloth-gender" data-testid="cloths_gender_filter_select"
+                    onchange="populateClothDropdown()">
+                    <option value="all">All</option>
+                    <option value="men">Men</option>
+                    <option value="women">Women</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="input-cloth-select">Product (Dropdown — 5000+)</label>
+                <select id="input-cloth-select" data-testid="cloths_product_select_dropdown"
+                    onchange="applySelectedClothProduct()"></select>
+            </div>
+            <div style="display:flex; gap:8px; margin-bottom: 15px;">
+                <button type="button" class="btn" data-testid="cloths_apply_product_button"
+                    onclick="applySelectedClothProduct('replace')">Apply to First Item</button>
+                <button type="button" class="btn" style="background-color:#4CAF50;"
+                    data-testid="cloths_add_product_from_dropdown_button"
+                    onclick="applySelectedClothProduct('add')">Add as New Item</button>
             </div>
 
             <h3>Products Line Items</h3>
@@ -364,10 +404,11 @@
                             <strong>GSTIN Number:</strong> <span id="preview-gstin">27AAXCS8821M1ZB</span>
                         </td>
                         <td>
-                            <strong>Deepak Sharma</strong><br>
-                            I-220 Shiv Ram Park, Gali No. 17<br>
-                            Nangloi Delhi - 110041<br>
-                            Delhi, India<br>
+                            <strong id="preview-customer-name" data-testid="cloths_customer_name_text">Deepak Sharma</strong><br>
+                            <span id="preview-customer-address" data-testid="cloths_customer_address_text"
+                                style="white-space: pre-line;">I-220 Shiv Ram Park, Gali No. 17
+Nangloi Delhi - 110041
+Delhi, India</span><br>
                             <strong>Customer Type:</strong> Unregistered
                         </td>
                     </tr>
@@ -494,6 +535,69 @@
             updateInvoice();
         }
 
+        function applyClothSuggestion(item, mode) {
+            const product = {
+                desc: item.desc,
+                qty: item.qty || 1,
+                gross: item.gross,
+                discount: item.discount || 0,
+                gstRate: item.gstRate || 5
+            };
+            if (mode === 'add' || products.length === 0) {
+                products.push(product);
+            } else {
+                products[0] = product;
+            }
+            renderFormRows();
+            updateInvoice();
+        }
+
+        function getClothCatalog() {
+            return Array.isArray(window.CLOTHS_CATALOG) ? window.CLOTHS_CATALOG : [];
+        }
+
+        function populateClothDropdown() {
+            const select = document.getElementById('input-cloth-select');
+            const gender = document.getElementById('input-cloth-gender').value;
+            const catalog = getClothCatalog();
+            const filtered = gender === 'all'
+                ? catalog
+                : catalog.filter((item) => item.gender === gender);
+
+            select.innerHTML = '';
+            const fragment = document.createDocumentFragment();
+            filtered.forEach((item) => {
+                const option = document.createElement('option');
+                option.value = item.id;
+                option.textContent = `${item.desc} — ₹${item.gross}`;
+                option.setAttribute('data-desc', item.desc);
+                option.setAttribute('data-qty', String(item.qty || 1));
+                option.setAttribute('data-gross', String(item.gross));
+                option.setAttribute('data-discount', String(item.discount || 0));
+                option.setAttribute('data-gst', String(item.gstRate || 5));
+                fragment.appendChild(option);
+            });
+            select.appendChild(fragment);
+
+            const defaultId = 'roadster_men_black_tshirt_xl';
+            if (Array.from(select.options).some((opt) => opt.value === defaultId)) {
+                select.value = defaultId;
+            }
+        }
+
+        function applySelectedClothProduct(mode) {
+            const select = document.getElementById('input-cloth-select');
+            const option = select.options[select.selectedIndex];
+            if (!option) return;
+            applyClothSuggestion({
+                desc: option.getAttribute('data-desc') || option.textContent,
+                qty: parseFloat(option.getAttribute('data-qty')) || 1,
+                gross: parseFloat(option.getAttribute('data-gross')) || 0,
+                discount: parseFloat(option.getAttribute('data-discount')) || 0,
+                gstRate: parseFloat(option.getAttribute('data-gst')) || 5
+            }, mode || 'replace');
+        }
+
         function removeProductRow(index) {
             products.splice(index, 1);
             renderFormRows();
@@ -518,10 +622,14 @@
             // Get the values from the form inputs
             const sellerName = document.getElementById('form-seller-name').value;
             const sellerAddress = document.getElementById('form-seller-address').value;
+            const customerName = document.getElementById('form-customer-name').value;
+            const customerAddress = document.getElementById('form-customer-address').value;
 
             // Update Top Address Layout
             document.getElementById('preview-seller-name').innerText = sellerName;
             document.getElementById('preview-seller-address').innerText = sellerAddress;
+            document.getElementById('preview-customer-name').innerText = customerName;
+            document.getElementById('preview-customer-address').innerText = customerAddress;
 
             // Update Footer Layout (Fixes the bug)
             document.getElementById('preview-seller-name-footer').innerText = sellerName;
@@ -597,7 +705,37 @@
         }
 
         // Launch configuration on document complete
-        window.onload = init;
+        window.onload = function () {
+            const clothsStorage = FormStorage.bind({
+                pageKey: 'cloths',
+                fields: [
+                    'form-seller-name',
+                    'form-seller-address',
+                    'form-customer-name',
+                    'form-customer-address'
+                ],
+                sharedMap: {
+                    'form-customer-name': 'customerName',
+                    'form-customer-address': 'customerAddress'
+                },
+                onChange: function () {}
+            });
+            populateClothDropdown();
+            init();
+            SuggestionChatbot.init({
+                mode: 'cloths',
+                onApply: function (item) {
+                    applyClothSuggestion(item, 'replace');
+                    const select = document.getElementById('input-cloth-select');
+                    const match = Array.from(select.options).find((opt) => opt.value === item.id);
+                    if (match) select.value = item.id;
+                    clothsStorage.persist();
+                },
+                onAdd: function (item) {
+                    applyClothSuggestion(item, 'add');
+                }
+            });
+        };
     </script>
 </body>
 
