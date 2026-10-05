@@ -296,6 +296,12 @@
     </div>
 
     <div class="form-group">
+      <label for="input-bill-month">Bill Month</label>
+      <select id="input-bill-month" data-testid="course_bill_month_select"
+        onchange="onCourseBillMonthChange()"></select>
+    </div>
+
+    <div class="form-group">
       <label for="input-inv-date">Invoice Date</label>
       <input type="date" id="input-inv-date" data-testid="course_invoice_date_input"
         onchange="processCalculations()">
@@ -325,6 +331,9 @@
         step="0.01" oninput="processCalculations()">
     </div>
 
+    <button type="button" class="btn-print" data-testid="course_generate_bill_button"
+      style="background-color: var(--unacademy-green); margin-bottom: 8px;"
+      onclick="generateCourseBill()">Generate Bill</button>
     <button type="button" class="btn-print" id="btn-download" data-testid="course_download_pdf_button"
       onclick="generateInvoicePdf()">Download Invoice PDF</button>
   </div>
@@ -447,6 +456,7 @@
   </div>
 
   <script src="form-storage.js"></script>
+  <script src="bill-month-dates.js"></script>
   <script src="courses-catalog.js"></script>
   <script src="suggestion-chatbot.js"></script>
   <script>
@@ -481,13 +491,22 @@
       processCalculations();
     }
 
-    function setCurrentDefaults() {
-      const now = new Date();
-      const localDate = now.toISOString().split('T')[0];
-      const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    const courseMonthDateGen = BillMonthDates.createGenerator();
 
-      document.getElementById('input-inv-date').value = localDate;
-      document.getElementById('input-pay-time').value = localDateTime;
+    function getCourseBillMonthIndex() {
+      return parseInt(document.getElementById('input-bill-month').value, 10);
+    }
+
+    function onCourseBillMonthChange() {
+      courseMonthDateGen.resetForMonth();
+    }
+
+    function generateCourseBill() {
+      const generated = courseMonthDateGen.generateForMonth(getCourseBillMonthIndex());
+      document.getElementById('input-inv-date').value = generated.dateValue;
+      document.getElementById('input-pay-time').value = generated.dateTimeLocalValue;
+      seedAutoValues();
+      processCalculations();
     }
 
     // Generate isolated random alpha-numeric identifiers on programmatic load lifecycle
@@ -622,9 +641,8 @@
           processCalculations();
         }
       });
-      setCurrentDefaults();
-      seedAutoValues();
-      processCalculations();
+      BillMonthDates.populateMonthSelect(document.getElementById('input-bill-month'));
+      generateCourseBill();
       SuggestionChatbot.init({
         mode: 'course',
         onApply: function (item) {

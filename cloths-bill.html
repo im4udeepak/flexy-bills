@@ -7,6 +7,7 @@
     <title>Interactive Tax Invoice Generator</title>
     <link rel="stylesheet" href="suggestion-chatbot.css">
     <script src="form-storage.js"></script>
+    <script src="bill-month-dates.js"></script>
     <script src="clothes-catalog.js"></script>
     <script src="suggestion-chatbot.js"></script>
     <style>
@@ -306,6 +307,12 @@
             </div>
 
             <div class="form-group">
+                <label for="form-bill-month">Bill Month</label>
+                <select id="form-bill-month" data-testid="cloths_bill_month_select"
+                    onchange="onBillMonthChange()"></select>
+            </div>
+
+            <div class="form-group">
                 <label>Invoice Date</label>
                 <input type="date" id="form-invoice-date" data-testid="cloths_invoice_date_input"
                     onchange="updateInvoice()">
@@ -313,7 +320,8 @@
 
             <div class="form-group">
                 <label>Order Date</label>
-                <input type="date" id="form-order-date" onchange="updateInvoice()">
+                <input type="date" id="form-order-date" data-testid="cloths_order_date_input"
+                    onchange="updateInvoice()">
             </div>
 
             <h3>Product Suggestions</h3>
@@ -345,6 +353,8 @@
 
             <button type="button" class="btn" style="margin-bottom: 20px; background-color: #4CAF50;"
                 onclick="addProductRow()">+ Add Product</button>
+            <button type="button" class="btn" data-testid="cloths_generate_bill_button"
+                style="margin-bottom: 12px; background-color: #00897B;" onclick="generateBillDates()">Generate Bill</button>
             <br>
             <button type="button" class="btn" onclick="window.print()">Print Invoice</button>
         </div>
@@ -478,12 +488,36 @@ Delhi, India</span><br>
             { desc: "Roadster Men Black Round Neck T-shirt with Striped Sleeves, Size: XL", qty: 1, gross: 699, discount: 144.76, gstRate: 5 }
         ];
 
-        function init() {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('form-invoice-date').value = today;
-            document.getElementById('form-order-date').value = today;
-            renderFormRows();
+        const clothsMonthDateGen = BillMonthDates.createGenerator();
+
+        function getSelectedBillMonthIndex() {
+            return parseInt(document.getElementById('form-bill-month').value, 10);
+        }
+
+        function onBillMonthChange() {
+            clothsMonthDateGen.resetForMonth();
+        }
+
+        function generateBillDates() {
+            const monthIndex = getSelectedBillMonthIndex();
+            const generated = clothsMonthDateGen.generateForMonth(monthIndex);
+            document.getElementById('form-invoice-date').value = generated.dateValue;
+            const orderOffsetDays = randomIntCloths(0, 2);
+            const orderDay = Math.max(1, generated.day - orderOffsetDays);
+            const pad2 = (n) => String(n).padStart(2, '0');
+            document.getElementById('form-order-date').value =
+                `${generated.year}-${pad2(monthIndex + 1)}-${pad2(orderDay)}`;
             updateInvoice();
+        }
+
+        function randomIntCloths(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function init() {
+            BillMonthDates.populateMonthSelect(document.getElementById('form-bill-month'));
+            renderFormRows();
+            generateBillDates();
         }
 
         function renderFormRows() {

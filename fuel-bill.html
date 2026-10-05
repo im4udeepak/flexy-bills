@@ -234,16 +234,20 @@
         <input id="amountPaid" data-testid="fuel_amount_paid_input" type="number" step="0.01"
             placeholder="Amount Paid (INR)">
 
+        <label for="fuel-bill-month">Bill Month</label>
+        <select id="fuel-bill-month" data-testid="fuel_bill_month_select"
+            onchange="onFuelBillMonthChange()"></select>
+
         <label for="date">Date & Time</label>
         <input id="date" data-testid="fuel_date_input" type="datetime-local">
 
-        <button type="button" data-testid="fuel_generate_button" onclick="generate()">
+        <button type="button" data-testid="fuel_generate_button" onclick="generateReceipt()">
             Generate Receipt
         </button>
 
-        <button type="button" id="btn-download" data-testid="fuel_download_pdf_button"
-            onclick="downloadPDF()">
-            Download PDF
+        <button type="button" id="btn-download" data-testid="fuel_download_image_button"
+            onclick="downloadImage()">
+            Download Image
         </button>
 
     </div>
@@ -618,8 +622,28 @@
 
 
     <script src="form-storage.js"></script>
+    <script src="bill-month-dates.js"></script>
     <script>
 
+        const fuelMonthDateGen = BillMonthDates.createGenerator();
+
+        function getFuelBillMonthIndex() {
+            return parseInt(document.getElementById('fuel-bill-month').value, 10);
+        }
+
+        function onFuelBillMonthChange() {
+            fuelMonthDateGen.resetForMonth();
+        }
+
+        function applyRandomDateTimeForFuelMonth() {
+            const generated = fuelMonthDateGen.generateForMonth(getFuelBillMonthIndex());
+            document.getElementById('date').value = generated.dateTimeLocalValue;
+        }
+
+        function generateReceipt() {
+            applyRandomDateTimeForFuelMonth();
+            generate();
+        }
 
         function randomNumber() {
 
@@ -739,14 +763,9 @@
 
         }
 
-        function setCurrentDateTime() {
-            const now = new Date();
-            const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-            document.getElementById("date").value = localDateTime;
-        }
-
         window.onload = function () {
-            setCurrentDateTime();
+            BillMonthDates.populateMonthSelect(document.getElementById('fuel-bill-month'));
+            applyRandomDateTimeForFuelMonth();
             FormStorage.bind({
                 pageKey: 'fuel',
                 fields: [
@@ -778,11 +797,11 @@
 
 
 
-        function downloadPDF() {
+        function downloadImage() {
             const targetElement = document.getElementById("receipt");
             const btn = document.getElementById("btn-download");
 
-            btn.innerText = "Generating PDF...";
+            btn.innerText = "Generating image...";
             btn.disabled = true;
 
             html2canvas(targetElement, {
@@ -790,29 +809,15 @@
                 useCORS: true,
                 backgroundColor: "#ffffff"
             }).then(canvas => {
-                const imgData = canvas.toDataURL("image/png");
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF({
-                    orientation: "portrait",
-                    unit: "mm",
-                    format: "a4"
-                });
+                const link = document.createElement("a");
+                link.href = canvas.toDataURL("image/png");
+                link.download = "fuel-receipt.png";
+                link.click();
 
-                const pageWidth = pdf.internal.pageSize.getWidth();
-                const pageHeight = pdf.internal.pageSize.getHeight();
-                const margin = 10;
-                const usableWidth = Math.min(pageWidth - margin * 2, 90);
-                const imgHeight = (canvas.height * usableWidth) / canvas.width;
-                const renderHeight = Math.min(imgHeight, pageHeight - margin * 2);
-                const x = (pageWidth - usableWidth) / 2;
-
-                pdf.addImage(imgData, "PNG", x, margin, usableWidth, renderHeight);
-                pdf.save("fuel-receipt.pdf");
-
-                btn.innerText = "Download PDF";
+                btn.innerText = "Download Image";
                 btn.disabled = false;
             }).catch(err => {
-                console.error("PDF generation error:", err);
+                console.error("Image generation error:", err);
                 btn.innerText = "Download Failed";
                 btn.disabled = false;
             });
@@ -823,7 +828,6 @@
 
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 
 </body>

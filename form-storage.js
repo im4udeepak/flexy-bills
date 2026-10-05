@@ -1,5 +1,5 @@
 (function (global) {
-  var SHARED_KEY = 'flexy_bills_shared_profile';
+  var SHARED_KEY = 'pluxee_sodexo_bills_shared_profile';
 
   function readJson(key) {
     try {
@@ -62,7 +62,7 @@
     var fields = config.fields || [];
     var sharedMap = config.sharedMap || {};
     var onChange = typeof config.onChange === 'function' ? config.onChange : function () {};
-    var storageKey = 'flexy_bills_' + pageKey;
+    var storageKey = 'pluxee_sodexo_bills_' + pageKey;
 
     function persist() {
       var pageData = readJson(storageKey);
